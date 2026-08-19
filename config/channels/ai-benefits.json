@@ -1,13 +1,13 @@
 {
-  "$comment": "STAGED, NOT LIVE. niche, audience and voice below are inferred from the channel name and have not been confirmed. Correct them, then set enabled to true.",
+  "$comment": "Content channel. AI tools and what they actually do for you. Not selling anything — Whop products belong on ClipVault Agency.",
   "enabled": false,
   "channel": {
     "name": "Ai Benefits",
     "handle": "@aibenefits",
     "googleAccount": "mizginhassan806@gmail.com",
     "language": "en",
-    "niche": "AI tools and Whop communities that teach people to use them — what each one actually saves you",
-    "audience": "20-40, English-speaking, curious about AI but tired of demo videos that show a feature and never a result",
+    "niche": "AI tools judged by what they replace in a real week, not by what they demo",
+    "audience": "20-40, English-speaking, curious about AI but tired of videos that show a feature and never a result",
     "promise": "What this AI tool actually replaces in your week — shown, not claimed"
   },
   "voice": {
@@ -26,9 +26,9 @@
     ]
   },
   "cadence": {
-    "postsPerDay": 2,
+    "postsPerDay": 1,
     "minMinutesBetweenPosts": 240,
-    "maxQueueDepth": 40
+    "maxQueueDepth": 30
   },
   "compliance": {
     "affiliateDisclosure": "#ad — affiliate link. I earn a commission if you join.",
@@ -41,30 +41,25 @@
     ]
   },
   "platforms": {
-    "youtube": {
-      "enabled": true
-    },
-    "instagram": {
-      "enabled": true
-    },
-    "tiktok": {
-      "enabled": true
-    }
+    "youtube": { "enabled": true },
+    "instagram": { "enabled": true },
+    "tiktok": { "enabled": true }
   },
   "sources": {
-    "discovery": {
-      "minReviewCount": 10,
-      "minRating": 4,
-      "maxNewItemsPerRun": 6
-    },
-    "manualProducts": [],
+    "type": "topics",
+    "topics": [
+      {
+        "$comment": "REPLACE ME. One tool, one real task you used it for, and what it got wrong.",
+        "id": "example-topic",
+        "title": "Example: transcribing a two-hour meeting",
+        "reference": "",
+        "category": "productivity",
+        "angleNotes": "Replace this entry. Write the specific task and the specific place the tool struggled.",
+        "enabled": false
+      }
+    ],
     "exclude": {
-      "keywords": [
-        "signals",
-        "crypto pump",
-        "betting",
-        "casino"
-      ],
+      "keywords": ["signals", "crypto pump", "betting", "casino"],
       "productIds": []
     }
   }

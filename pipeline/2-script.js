@@ -104,20 +104,34 @@ function buildSystem(channel, platforms) {
   ].join('\n');
 }
 
+// A product brief and a topic brief are genuinely different jobs: one is a review with
+// a purchase behind it, the other is an explanation with nothing being sold. Asking for
+// a "product video" about a topic produces a script that keeps reaching for a CTA that
+// does not exist.
 function buildPrompt(item) {
   const { source, brief } = item;
+  const isProduct = source.type === 'whop';
+
   return [
-    'Write one short-form video for this product.',
+    isProduct
+      ? 'Write one short-form video reviewing this product.'
+      : 'Write one short-form video about this topic. Nothing is being sold here — the',
+    isProduct ? null : 'video earns its place by being interesting, not by converting.',
     '',
-    `Product: ${source.name}`,
+    `${isProduct ? 'Product' : 'Topic'}: ${source.name}`,
     source.priceLabel ? `Price: ${source.priceLabel}` : null,
     source.category ? `Category: ${source.category}` : null,
-    source.url ? `URL: ${source.url}` : null,
-    brief.angleNotes ? `\nMy own notes from vetting it:\n${brief.angleNotes}` : null,
+    source.url ? `Reference: ${source.url}` : null,
+    brief.angleNotes
+      ? `\n${isProduct ? 'My own notes from vetting it' : 'The angle this should be built on'}:\n${brief.angleNotes}`
+      : null,
     '',
     'Pick ONE angle and commit to it. The hook must be something a scrolling viewer',
     'would stop for — a specific number, an unexpected constraint, or a named mistake.',
     'The onScreen text is burned into the frame, so keep it short enough to read at a glance.',
+    isProduct
+      ? null
+      : 'The CTA should invite a thought or a reply, not a purchase. There is no link.',
   ]
     .filter(Boolean)
     .join('\n');

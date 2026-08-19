@@ -1,35 +1,34 @@
 {
-  "$comment": "The filename is the slug. It becomes the queue path (queue/wealthvault-insider/) and the credential suffix (_WEALTHVAULT_INSIDER).",
-  "enabled": true,
+  "$comment": "Content channel, not an affiliate channel. Money and wealth as a subject, with nothing being sold. Whop products belong on ClipVault Agency, not here.",
+  "enabled": false,
   "channel": {
     "name": "WealthVault Insider",
     "handle": "@wealthvaultinsider",
     "googleAccount": "buddybuses@gmail.com",
     "language": "en",
-    "niche": "Whop communities and products in money, trading, e-commerce and online income",
-    "audience": "18-34, English-speaking, already curious about making money online, sceptical of hype and allergic to obvious ads",
-    "promise": "One honest, specific reason a product is worth a look — in under 40 seconds"
+    "niche": "How money actually works — the mechanics behind wealth, told in specifics rather than slogans",
+    "audience": "20-40, English-speaking, wants to understand money properly and is tired of being sold a course instead of an explanation",
+    "promise": "One mechanism of money explained concretely, in under 40 seconds"
   },
   "voice": {
-    "persona": "A peer who actually tried the thing. Direct, concrete, mildly funny. Never a hype man.",
+    "persona": "Someone who reads the actual filings and explains what they found, plainly.",
     "do": [
-      "Open on a concrete detail or a number, never on 'In this video'",
-      "Name the specific person the product is not for",
-      "Use plain words a 15-year-old would say out loud",
-      "Keep one idea per video"
+      "Open on a real number or a real event, never on a promise",
+      "Explain the mechanism, not the outcome",
+      "Say who this does not apply to",
+      "One idea per video"
     ],
     "dont": [
-      "No 'guys', 'insane', 'crazy', 'literally changed my life', 'you won't believe'",
-      "No income claims, guaranteed returns, or earnings figures presented as typical",
-      "No fake scarcity, countdowns, or invented testimonials",
-      "No financial advice framed as instruction — this is a review channel, not an advisor"
+      "No 'this is why the rich stay rich', 'they don't want you to know', 'nobody talks about'",
+      "No income claims, guaranteed returns, or price predictions",
+      "No telling anyone what to buy or sell — explain, never advise",
+      "No invented statistics; if the number is not sourced, do not use it"
     ]
   },
   "cadence": {
-    "$comment": "Enforced inside the publish stage, not by cron, so a manual run cannot exceed it.",
-    "postsPerDay": 2,
+    "postsPerDay": 1,
     "minMinutesBetweenPosts": 240,
-    "maxQueueDepth": 40
+    "maxQueueDepth": 30
   },
   "compliance": {
     "affiliateDisclosure": "#ad — affiliate link. I earn a commission if you join.",
@@ -37,51 +36,32 @@
     "bannedClaimPatterns": [
       "guaranteed",
       "risk[- ]free",
-      "passive income guaranteed",
       "get rich",
+      "will definitely",
       "\\d+x your money"
     ]
   },
   "platforms": {
-    "$comment": "Opt a channel out of a globally enabled platform. Cannot opt in beyond config/platforms.json.",
-    "youtube": {
-      "enabled": true
-    },
-    "instagram": {
-      "enabled": true
-    },
-    "tiktok": {
-      "enabled": true
-    }
+    "youtube": { "enabled": true },
+    "instagram": { "enabled": true },
+    "tiktok": { "enabled": true }
   },
   "sources": {
-    "$comment": "Vetted products for THIS channel. See .claude/skills/whop-ugc-sourcing/SKILL.md for the bar an entry has to clear.",
-    "discovery": {
-      "minReviewCount": 10,
-      "minRating": 4,
-      "maxNewItemsPerRun": 6
-    },
-    "manualProducts": [
+    "type": "topics",
+    "$comment": "Ideas, not products. angleNotes is what separates a video worth watching from a Wikipedia summary — put the specific thing you noticed there.",
+    "topics": [
       {
-        "$comment": "Replace with a real product. angleNotes is the highest-leverage field in the repo — it is handed to the scriptwriter as your vetting notes.",
-        "id": "example-product",
-        "name": "Example Whop Community",
-        "url": "https://whop.com/example",
-        "affiliateUrl": "",
-        "priceLabel": "$29/mo",
-        "angleNotes": "Replace this entry. It exists so the pipeline has something to run against on day one.",
+        "$comment": "REPLACE ME. Two or three real topics beats twenty vague ones.",
+        "id": "example-topic",
+        "title": "Example: why index funds beat most managed funds",
+        "reference": "",
+        "category": "investing",
+        "angleNotes": "Replace this entry. Write the specific observation the video should be built on, not the subject.",
         "enabled": false
       }
     ],
     "exclude": {
-      "keywords": [
-        "signals",
-        "forex signals",
-        "crypto pump",
-        "betting",
-        "casino",
-        "sports picks"
-      ],
+      "keywords": ["signals", "crypto pump", "betting", "casino", "sports picks"],
       "productIds": []
     }
   }

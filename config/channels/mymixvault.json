@@ -1,31 +1,35 @@
 {
-  "$comment": "STAGED, NOT LIVE. The name reads as music, which does not obviously fit Whop product reviews — and this is the only channel with real subscribers, so it is the one worth getting right rather than guessing at. Tell me what it is for and I will rewrite this.",
+  "$comment": "The wide-net channel: a bit of everything, chosen for viral potential rather than for a niche. This is the only channel with real subscribers, so it is the one where a bad video costs something.",
   "enabled": false,
   "channel": {
     "name": "MyMixVault",
     "handle": "@mymixvault",
     "googleAccount": "mizginhassan19@gmail.com",
     "language": "en",
-    "niche": "PLACEHOLDER — needs your input. Currently assumed to be music mixes, which the Whop pipeline does not serve.",
-    "audience": "PLACEHOLDER — needs your input.",
-    "promise": "PLACEHOLDER — needs your input."
+    "niche": "Anything with a genuinely surprising fact at the centre of it — no fixed subject, chosen for how hard it is to scroll past",
+    "audience": "16-30, English-speaking, broad general audience with no particular interest in common beyond wanting to be told something they did not know",
+    "promise": "One fact you will want to repeat to someone, in under 30 seconds"
   },
   "voice": {
-    "persona": "PLACEHOLDER — needs your input before this channel produces anything.",
+    "persona": "The friend who opens with 'okay, this is going to sound made up' and then turns out to be right.",
     "do": [
-      "Open on something concrete",
-      "One idea per video"
+      "Lead with the most surprising part — no setup, no context first",
+      "Keep it under 30 seconds; this channel lives on completion rate",
+      "Make the fact repeatable — the viewer should be able to retell it",
+      "Land on something that invites a comment, not a subscribe request"
     ],
     "dont": [
-      "No hype language",
-      "No invented claims",
-      "No fake scarcity"
+      "No 'you won't believe', 'wait for it', 'watch till the end' — earn it instead",
+      "No unverified facts. A wrong fact on this channel is worse than a boring one, because the comments will do the correcting",
+      "No ragebait or manufactured controversy",
+      "No engagement-farming questions ('comment yes if...')"
     ]
   },
   "cadence": {
-    "postsPerDay": 1,
-    "minMinutesBetweenPosts": 240,
-    "maxQueueDepth": 20
+    "$comment": "Highest volume of the four — a wide-net channel needs shots on goal, and each video is short.",
+    "postsPerDay": 3,
+    "minMinutesBetweenPosts": 180,
+    "maxQueueDepth": 50
   },
   "compliance": {
     "affiliateDisclosure": "#ad — affiliate link. I earn a commission if you join.",
@@ -34,23 +38,42 @@
       "guaranteed",
       "risk[- ]free",
       "get rich",
+      "doctors hate",
       "\\d+x your money"
     ]
   },
   "platforms": {
-    "youtube": { "enabled": true },
-    "instagram": { "enabled": true },
-    "tiktok": { "enabled": true }
+    "youtube": {
+      "enabled": true
+    },
+    "instagram": {
+      "enabled": true
+    },
+    "tiktok": {
+      "enabled": true
+    }
   },
   "sources": {
-    "discovery": {
-      "minReviewCount": 10,
-      "minRating": 4.0,
-      "maxNewItemsPerRun": 4
-    },
-    "manualProducts": [],
+    "type": "topics",
+    "$comment": "Anything goes, as long as the fact is true and checkable. Put the surprising part in angleNotes — that is what the hook gets built from.",
+    "topics": [
+      {
+        "$comment": "REPLACE ME. The angleNotes field is the video; the title is just a label.",
+        "id": "example-topic",
+        "title": "Example: the reason lobsters were once prison food",
+        "reference": "",
+        "category": "history",
+        "angleNotes": "Replace this entry. Write the single surprising fact, and where you verified it.",
+        "enabled": false
+      }
+    ],
     "exclude": {
-      "keywords": ["signals", "crypto pump", "betting", "casino"],
+      "keywords": [
+        "betting",
+        "casino",
+        "crypto pump",
+        "conspiracy"
+      ],
       "productIds": []
     }
   }

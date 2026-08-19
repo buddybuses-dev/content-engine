@@ -6,7 +6,7 @@
 // duplicates. The same product may legitimately appear on two channels — the check is
 // scoped per channel, not global.
 
-import { collect } from '../sources/whop.js';
+import { sourceFor } from '../sources/index.js';
 import { enabledChannels } from '../lib/channels.js';
 import {
   createItem,
@@ -48,10 +48,16 @@ async function sourceChannel(channel) {
     return { channel: slug, candidates: 0, created: 0, note: `at capacity (${pending}/${maxDepth})` };
   }
 
-  const products = await collect(sources, slug);
+  const source = sourceFor(channel);
+  const products = await source.collect(sources, slug);
   if (products.length === 0) {
-    log.warn('no products available', { channel: slug });
-    return { channel: slug, candidates: 0, created: 0, note: 'no products configured' };
+    log.warn('nothing to source', { channel: slug, sourceType: sources.type ?? 'topics' });
+    return {
+      channel: slug,
+      candidates: 0,
+      created: 0,
+      note: sources.type === 'whop' ? 'no products configured' : 'no topics configured',
+    };
   }
 
   const seen = await seenProductIds(slug);
