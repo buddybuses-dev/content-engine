@@ -29,16 +29,14 @@ jobs:
     timeout-minutes: 45
     env:
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      WHOP_API_KEY: ${{ secrets.WHOP_API_KEY }}
-      ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-      ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
       RENDERER: ${{ vars.RENDERER || 'manual' }}
       LLM_MODEL: ${{ vars.LLM_MODEL || 'claude-opus-5' }}
 
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+        with:
+          secrets: ${{ toJSON(secrets) }}
 
       - name: Source new briefs
         run: npm run source

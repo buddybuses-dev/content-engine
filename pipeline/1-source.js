@@ -1,50 +1,67 @@
 #!/usr/bin/env node
-// Stage 1 — SOURCE. Turn vetted Whop products into content briefs.
+// Stage 1 — SOURCE. Turn vetted Whop products into content briefs, per channel.
 //
-// Idempotent by design: a product already somewhere in the queue is never briefed
-// twice, so this can run every few hours without the queue filling with duplicates.
+// Idempotent by design: a product already somewhere in that channel's queue is never
+// briefed twice, so this can run every few hours without the queue filling with
+// duplicates. The same product may legitimately appear on two channels — the check is
+// scoped per channel, not global.
 
 import { collect } from '../sources/whop.js';
-import { loadChannel, loadWhopSources } from '../lib/config.js';
-import { createItem, saveItem, listItems, countItems, STAGE_ORDER } from '../lib/store.js';
+import { enabledChannels } from '../lib/channels.js';
+import {
+  createItem,
+  saveItem,
+  listItems,
+  countItems,
+  ensureChannelQueue,
+  STAGE_ORDER,
+} from '../lib/store.js';
 import { logger, summary } from '../lib/log.js';
 
 const log = logger('1-source');
 
-async function existingProductIds() {
+async function seenProductIds(channelSlug) {
   const ids = new Set();
   for (const stage of [...STAGE_ORDER, 'failed']) {
-    for (const item of await listItems(stage)) {
+    for (const item of await listItems(channelSlug, stage)) {
       if (item.source?.productId) ids.add(item.source.productId);
     }
   }
   return ids;
 }
 
-async function main() {
-  const [channel, sources] = await Promise.all([loadChannel(), loadWhopSources()]);
+async function sourceChannel(channel) {
+  const slug = channel.slug;
+  await ensureChannelQueue(slug);
+
+  const sources = channel.sources ?? {};
   const maxNew = sources.discovery?.maxNewItemsPerRun ?? 5;
   const maxDepth = channel.cadence?.maxQueueDepth ?? 40;
 
-  const pending = (await countItems('brief')) + (await countItems('script')) + (await countItems('render'));
+  const pending =
+    (await countItems(slug, 'brief')) +
+    (await countItems(slug, 'script')) +
+    (await countItems(slug, 'render'));
+
   if (pending >= maxDepth) {
-    log.info('queue at capacity, sourcing nothing', { pending, maxDepth });
-    await summary(`### Source\nQueue at capacity (${pending}/${maxDepth}) — no new briefs.\n`);
-    return;
+    log.info('queue at capacity, sourcing nothing', { channel: slug, pending, maxDepth });
+    return { channel: slug, candidates: 0, created: 0, note: `at capacity (${pending}/${maxDepth})` };
   }
 
-  const products = await collect(sources);
+  const products = await collect(sources, slug);
   if (products.length === 0) {
-    log.warn('no products returned — add entries to config/whop.sources.json manualProducts');
-    await summary('### Source\n:warning: No products available. Populate `config/whop.sources.json`.\n');
-    return;
+    log.warn('no products available', { channel: slug });
+    return { channel: slug, candidates: 0, created: 0, note: 'no products configured' };
   }
 
-  const seen = await existingProductIds();
-  const fresh = products.filter((p) => !seen.has(p.productId)).slice(0, Math.min(maxNew, maxDepth - pending));
+  const seen = await seenProductIds(slug);
+  const fresh = products
+    .filter((p) => !seen.has(p.productId))
+    .slice(0, Math.min(maxNew, maxDepth - pending));
 
   for (const product of fresh) {
     const item = createItem({
+      channel: slug,
       title: product.name,
       source: product,
       brief: {
@@ -54,12 +71,47 @@ async function main() {
       },
     });
     await saveItem(item);
-    log.info('briefed', { id: item.id, product: product.name });
+    log.info('briefed', { channel: slug, id: item.id, product: product.name });
   }
 
-  log.info('done', { candidates: products.length, created: fresh.length, skippedAsSeen: products.length - fresh.length });
+  const skipped = products.length - fresh.length;
+  return {
+    channel: slug,
+    candidates: products.length,
+    created: fresh.length,
+    note: skipped > 0 ? `${skipped} already in pipeline` : '',
+  };
+}
+
+async function main() {
+  const channels = await enabledChannels();
+  log.info('sourcing', { channels: channels.map((c) => c.slug) });
+
+  const results = [];
+  for (const channel of channels) {
+    try {
+      results.push(await sourceChannel(channel));
+    } catch (error) {
+      // One channel's bad config must not stop the others from producing.
+      log.error('channel failed', { channel: channel.slug, error: error.message });
+      results.push({
+        channel: channel.slug,
+        candidates: 0,
+        created: 0,
+        note: `ERROR: ${error.message}`,
+      });
+    }
+  }
+
   await summary(
-    `### Source\n- Candidates: ${products.length}\n- New briefs: ${fresh.length}\n- Already in pipeline: ${products.length - fresh.length}\n`,
+    [
+      '### Source',
+      '',
+      '| Channel | Candidates | New briefs | Note |',
+      '| --- | ---: | ---: | --- |',
+      ...results.map((r) => `| ${r.channel} | ${r.candidates} | ${r.created} | ${r.note || '—'} |`),
+      '',
+    ].join('\n'),
   );
 }
 

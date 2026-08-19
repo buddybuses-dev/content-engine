@@ -1,5 +1,16 @@
 name: Set up content engine
-description: Installs Node and the project's dependencies. Shared by every pipeline workflow.
+description: Installs Node, installs dependencies, and exports every repository secret as an environment variable.
+
+inputs:
+  secrets:
+    description: >
+      Pass `${{ toJSON(secrets) }}`. Every secret becomes an environment variable of
+      the same name. This is what lets a channel be added without editing a workflow —
+      credentials are suffixed per channel (YOUTUBE_REFRESH_TOKEN_AI_BENEFITS, …) and
+      enumerating them in four workflow files would guarantee they drift.
+      All secrets in this repository belong to this pipeline, so exporting them
+      wholesale grants the job nothing it would not already be given by name.
+    required: true
 
 runs:
   using: composite
@@ -12,3 +23,27 @@ runs:
     - name: Install dependencies
       shell: bash
       run: npm ci --no-audit --no-fund
+
+    - name: Export secrets as environment variables
+      shell: bash
+      env:
+        ALL_SECRETS: ${{ inputs.secrets }}
+      run: |
+        node -e '
+          const secrets = JSON.parse(process.env.ALL_SECRETS || "{}");
+          const fs = require("node:fs");
+          let exported = 0;
+          for (const [key, value] of Object.entries(secrets)) {
+            // github_token is injected by the runner already; re-exporting it under
+            // the wrong case just adds confusion.
+            if (key === "github_token") continue;
+            if (value === null || value === undefined || value === "") continue;
+            // Multi-line values need heredoc syntax in $GITHUB_ENV.
+            const delimiter = "EOF_" + Math.random().toString(36).slice(2);
+            fs.appendFileSync(process.env.GITHUB_ENV, `${key}<<${delimiter}\n${value}\n${delimiter}\n`);
+            exported += 1;
+          }
+          // Names only — the values are masked by Actions, but there is no reason to
+          // put them anywhere near a log line.
+          console.log(`Exported ${exported} secret(s): ${Object.keys(secrets).filter((k) => k !== "github_token").join(", ")}`);
+        '

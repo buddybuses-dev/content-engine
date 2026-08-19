@@ -6,7 +6,8 @@
 // what actually keeps an over-long title from reaching the YouTube API.
 
 import { generateJson } from '../lib/llm.js';
-import { loadChannel, loadPlatforms, enabledPlatforms, findBannedClaims } from '../lib/config.js';
+import { loadPlatforms } from '../lib/config.js';
+import { enabledChannels, channelPlatforms, findBannedClaims } from '../lib/channels.js';
 import { listItems, advance, fail } from '../lib/store.js';
 import { isDryRun, optional } from '../lib/env.js';
 import { logger, summary } from '../lib/log.js';
@@ -170,21 +171,15 @@ function appendDisclosure(script, channel, item) {
   return script;
 }
 
-async function main() {
-  const [channel, platforms, activePlatforms] = await Promise.all([
-    loadChannel(),
-    loadPlatforms(),
-    enabledPlatforms(),
-  ]);
-  const batchSize = Number(optional('SCRIPT_BATCH_SIZE', '4'));
-  const items = (await listItems('brief')).slice(0, batchSize);
+async function scriptChannel(channel, platforms, batchSize) {
+  const slug = channel.slug;
+  const activePlatforms = channelPlatforms(channel, platforms);
+  const items = (await listItems(slug, 'brief')).slice(0, batchSize);
 
-  if (items.length === 0) {
-    log.info('nothing to script');
-    await summary('### Script\nNo briefs waiting.\n');
-    return;
-  }
+  if (items.length === 0) return { channel: slug, written: 0, failed: 0 };
 
+  // Built once per channel: the system prompt is the channel's identity, and keeping
+  // it byte-identical across items in a batch is what makes prompt caching pay off.
   const system = buildSystem(channel, platforms);
   let written = 0;
   let failed = 0;
@@ -192,7 +187,7 @@ async function main() {
   for (const item of items) {
     try {
       if (isDryRun()) {
-        log.info('DRY_RUN — would write script', { id: item.id });
+        log.info('DRY_RUN — would write script', { channel: slug, id: item.id });
         continue;
       }
 
@@ -228,15 +223,46 @@ async function main() {
       item.plannedDurationSec = script.beats.reduce((t, b) => t + (b.seconds ?? 0), 0);
       await advance(item, 'render', 'script written');
       written += 1;
-      log.info('scripted', { id: item.id, seconds: item.plannedDurationSec });
+      log.info('scripted', { channel: slug, id: item.id, seconds: item.plannedDurationSec });
     } catch (error) {
-      log.error('scripting failed', { id: item.id, error: error.message });
+      log.error('scripting failed', { channel: slug, id: item.id, error: error.message });
       await fail(item, 'script generation error', error);
       failed += 1;
     }
   }
 
-  await summary(`### Script\n- Written: ${written}\n- Failed: ${failed}\n`);
+  return { channel: slug, written, failed };
+}
+
+async function main() {
+  const [channels, platforms] = await Promise.all([enabledChannels(), loadPlatforms()]);
+  const batchSize = Number(optional('SCRIPT_BATCH_SIZE', '4'));
+
+  const results = [];
+  for (const channel of channels) {
+    try {
+      results.push(await scriptChannel(channel, platforms, batchSize));
+    } catch (error) {
+      log.error('channel failed', { channel: channel.slug, error: error.message });
+      results.push({ channel: channel.slug, written: 0, failed: 0, note: error.message });
+    }
+  }
+
+  const total = results.reduce((sum, r) => sum + r.written, 0);
+  if (total === 0 && results.every((r) => r.failed === 0)) {
+    log.info('nothing to script');
+  }
+
+  await summary(
+    [
+      '### Script',
+      '',
+      '| Channel | Written | Failed | Note |',
+      '| --- | ---: | ---: | --- |',
+      ...results.map((r) => `| ${r.channel} | ${r.written} | ${r.failed} | ${r.note ?? '—'} |`),
+      '',
+    ].join('\n'),
+  );
 }
 
 main().catch((error) => {

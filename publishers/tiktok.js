@@ -8,7 +8,8 @@
 // as a secret and exchanged on every run.
 
 import { readFile } from 'node:fs/promises';
-import { required, optional } from '../lib/env.js';
+import { optional } from '../lib/env.js';
+import { channelEnv, requireChannelEnv } from '../lib/channels.js';
 import { request, requestJson } from '../lib/http.js';
 import { logger } from '../lib/log.js';
 
@@ -19,15 +20,17 @@ export const platform = 'tiktok';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function accessToken() {
+// One TikTok account per channel. The app credentials can be shared; the refresh
+// token is what identifies the account, so it always resolves per channel.
+async function accessToken(channelSlug) {
   const payload = await requestJson(`${API}/oauth/token/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_key: required('TIKTOK_CLIENT_KEY'),
-      client_secret: required('TIKTOK_CLIENT_SECRET'),
+      client_key: requireChannelEnv('TIKTOK_CLIENT_KEY', channelSlug),
+      client_secret: requireChannelEnv('TIKTOK_CLIENT_SECRET', channelSlug),
       grant_type: 'refresh_token',
-      refresh_token: required('TIKTOK_REFRESH_TOKEN'),
+      refresh_token: requireChannelEnv('TIKTOK_REFRESH_TOKEN', channelSlug),
     }),
   });
   if (!payload?.access_token) {
@@ -37,7 +40,7 @@ async function accessToken() {
 }
 
 export async function publish(item, spec) {
-  const token = await accessToken();
+  const token = await accessToken(item.channel);
   const video = await readFile(item.media.videoPath);
 
   // A single chunk keeps this simple and is well within TikTok's limits for a
@@ -90,7 +93,7 @@ export async function publish(item, spec) {
   return {
     platform,
     remoteId: String(remoteId),
-    url: `https://www.tiktok.com/@${optional('TIKTOK_HANDLE', 'me')}/video/${remoteId}`,
+    url: `https://www.tiktok.com/@${channelEnv('TIKTOK_HANDLE', item.channel) ?? 'me'}/video/${remoteId}`,
     publishedAt: new Date().toISOString(),
   };
 }

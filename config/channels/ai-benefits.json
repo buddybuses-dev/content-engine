@@ -1,0 +1,71 @@
+{
+  "$comment": "STAGED, NOT LIVE. niche, audience and voice below are inferred from the channel name and have not been confirmed. Correct them, then set enabled to true.",
+  "enabled": false,
+  "channel": {
+    "name": "Ai Benefits",
+    "handle": "@aibenefits",
+    "googleAccount": "mizginhassan806@gmail.com",
+    "language": "en",
+    "niche": "AI tools and Whop communities that teach people to use them — what each one actually saves you",
+    "audience": "20-40, English-speaking, curious about AI but tired of demo videos that show a feature and never a result",
+    "promise": "What this AI tool actually replaces in your week — shown, not claimed"
+  },
+  "voice": {
+    "persona": "Someone who used the tool for a real task and reports what happened, including where it fell over.",
+    "do": [
+      "Open with the concrete task, not the tool's name",
+      "Say what it failed at — that is the credibility",
+      "Compare against the free option honestly",
+      "One tool, one use case, per video"
+    ],
+    "dont": [
+      "No 'this AI will replace your job', 'game changer', 'nobody is talking about this'",
+      "No invented benchmarks or made-up time savings",
+      "No claiming a tool does something you have not seen it do",
+      "No fake scarcity or countdowns"
+    ]
+  },
+  "cadence": {
+    "postsPerDay": 2,
+    "minMinutesBetweenPosts": 240,
+    "maxQueueDepth": 40
+  },
+  "compliance": {
+    "affiliateDisclosure": "#ad — affiliate link. I earn a commission if you join.",
+    "requireDisclosureWhenAffiliate": true,
+    "bannedClaimPatterns": [
+      "guaranteed",
+      "risk[- ]free",
+      "replace your job",
+      "\\d+x your money"
+    ]
+  },
+  "platforms": {
+    "youtube": {
+      "enabled": true
+    },
+    "instagram": {
+      "enabled": true
+    },
+    "tiktok": {
+      "enabled": true
+    }
+  },
+  "sources": {
+    "discovery": {
+      "minReviewCount": 10,
+      "minRating": 4,
+      "maxNewItemsPerRun": 6
+    },
+    "manualProducts": [],
+    "exclude": {
+      "keywords": [
+        "signals",
+        "crypto pump",
+        "betting",
+        "casino"
+      ],
+      "productIds": []
+    }
+  }
+}

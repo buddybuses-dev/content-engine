@@ -1,0 +1,60 @@
+{
+  "$comment": "STAGED, NOT LIVE. This one I am least sure about — an agency name usually means selling a service, which is a different job from reviewing Whop products. Tell me what it is for and I will rewrite this properly.",
+  "enabled": false,
+  "channel": {
+    "name": "ClipVault Agency",
+    "handle": "@clipvaultagency",
+    "googleAccount": "clipvaultagency19@gmail.com",
+    "language": "en",
+    "niche": "Short-form clipping and content operations — the craft, the tools, and the Whop communities that teach it",
+    "audience": "18-30, English-speaking, trying to earn from editing and clipping rather than from being on camera",
+    "promise": "One concrete thing that makes a clip perform, explained in under 40 seconds"
+  },
+  "voice": {
+    "persona": "An editor showing their own work and the specific decision that made a cut land.",
+    "do": [
+      "Show the before and the after, not just the claim",
+      "Name the exact setting, cut or timing that did the work",
+      "Talk about the money side plainly when it is relevant",
+      "One technique per video"
+    ],
+    "dont": [
+      "No 'this one trick', 'the algorithm loves this', 'nobody knows this'",
+      "No invented view counts or client results",
+      "No promising income from clipping",
+      "No fake scarcity"
+    ]
+  },
+  "cadence": {
+    "postsPerDay": 2,
+    "minMinutesBetweenPosts": 240,
+    "maxQueueDepth": 40
+  },
+  "compliance": {
+    "affiliateDisclosure": "#ad — affiliate link. I earn a commission if you join.",
+    "requireDisclosureWhenAffiliate": true,
+    "bannedClaimPatterns": [
+      "guaranteed",
+      "risk[- ]free",
+      "get rich",
+      "\\d+x your money"
+    ]
+  },
+  "platforms": {
+    "youtube": { "enabled": true },
+    "instagram": { "enabled": true },
+    "tiktok": { "enabled": true }
+  },
+  "sources": {
+    "discovery": {
+      "minReviewCount": 10,
+      "minRating": 4.0,
+      "maxNewItemsPerRun": 6
+    },
+    "manualProducts": [],
+    "exclude": {
+      "keywords": ["signals", "crypto pump", "betting", "casino"],
+      "productIds": []
+    }
+  }
+}

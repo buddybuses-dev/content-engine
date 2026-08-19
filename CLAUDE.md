@@ -11,9 +11,13 @@ and TikTok — driven entirely by scheduled GitHub Actions.
 ## The one idea to understand first
 
 **The queue is the database.** Every content item is a single JSON file under
-`queue/<stage>/`, and moving between stages is a file move that git records. There is
-no external database, no state service, and no dashboard. This is why the pipeline is
-cheap to run forever and why its entire history is inspectable with `git log`.
+`queue/<channel>/<stage>/`, and moving between stages is a file move that git records.
+There is no external database, no state service, and no dashboard. This is why the
+pipeline is cheap to run forever and why its whole history is inspectable with `git log`.
+
+The queue is partitioned **by channel first, then by stage**. One channel's backlog can
+never be confused with another's, a channel is paused by not iterating it, and
+`git log queue/ai-benefits/` tells that channel's whole story without noise.
 
 Consequences worth holding onto:
 
@@ -22,25 +26,49 @@ Consequences worth holding onto:
   concurrency group and must never run in parallel.
 - Debugging is `cat` and `jq`, not log aggregation.
 
+## Channels
+
+Each channel is one file in `config/channels/`. **The filename is the slug**, and it is
+load-bearing in three places — the queue path, the credential suffix, and the logs:
+
+```
+config/channels/wealthvault-insider.json
+  → queue/wealthvault-insider/…
+  → YOUTUBE_REFRESH_TOKEN_WEALTHVAULT_INSIDER
+```
+
+Adding a channel is adding a file. There is no registration list to update and no
+workflow to edit — `lib/channels.js` globs the directory, and the workflows export
+every repository secret rather than naming them one by one, precisely so that adding a
+channel never requires touching `.github/`.
+
+Credentials resolve channel-specific first, shared second (`channelEnv` /
+`requireChannelEnv`). Never call `required()` for a platform credential — it cannot see
+the channel, and a four-channel setup will silently use the wrong account.
+
+Every stage iterates channels in a `try`/`catch` per channel. **One channel's failure
+must never stop the others.** That is deliberate and load-bearing; preserve it.
+
 ## Flow
 
 ```
-config/whop.sources.json
-  → 1-source   → queue/01-brief      (vetted product becomes a brief)
-  → 2-script   → queue/03-render     (Claude writes script + 3 platform captions)
-  → 3-render   → queue/04-ready      (video file produced or claimed)
-  → 4-publish  → queue/05-published  (YouTube + Instagram + TikTok)
-  → 5-stats                          (performance written back onto the item)
+config/channels/<slug>.json
+  → 1-source   → queue/<slug>/01-brief      (vetted product becomes a brief)
+  → 2-script   → queue/<slug>/03-render     (Claude writes script + 3 platform captions)
+  → 3-render   → queue/<slug>/04-ready      (video file produced or claimed)
+  → 4-publish  → queue/<slug>/05-published  (YouTube + Instagram + TikTok)
+  → 5-stats                                 (performance written back onto the item)
 ```
 
-`queue/02-script/` exists for symmetry but is transient — scripting writes straight
-through to `03-render`. An item sitting in `02-script` means something crashed mid-write.
+`02-script/` exists for symmetry but is transient — scripting writes straight through to
+`03-render`. An item sitting in `02-script` means something crashed mid-write.
 
 ## Layout
 
 | Path | Role |
 | --- | --- |
-| `config/` | All tunable behaviour. Voice, cadence, platform limits, source list. |
+| `config/channels/` | One file per channel: identity, voice, cadence, compliance, product list. |
+| `config/platforms.json` | Facts about YouTube/Instagram/TikTok. Not a per-channel choice. |
 | `lib/` | Shared plumbing: queue, HTTP retry, LLM, env, TTS, media hosting. |
 | `pipeline/` | One file per stage. Each is an entry point with its own npm script. |
 | `sources/` | Where content ideas come from. Whop today. |
@@ -55,9 +83,10 @@ through to `03-render`. An item sitting in `02-script` means something crashed m
   dependency is `@anthropic-ai/sdk`; everything else uses Node built-ins. This is what
   keeps CI installs fast and the supply chain small.
 - Behaviour belongs in `config/`, not in code. If you find yourself editing a prompt in
-  `pipeline/2-script.js` to change the channel's tone, edit `channel.config.json` instead.
-- Every credential is read through `lib/env.js`. `required()` throws with a message
-  naming the variable and pointing at `docs/SETUP.md`; never read `process.env` directly.
+  `pipeline/2-script.js` to change a channel's tone, edit that channel's file instead.
+- Credentials go through `lib/channels.js` (`channelEnv` / `requireChannelEnv`) so they
+  resolve per channel. `lib/env.js` `required()` is only for genuinely global settings.
+  Never read `process.env` directly.
 - Errors move an item to `99-failed` with the reason attached. Never swallow an error
   and never delete a failed item — triage is a human decision.
 - `DRY_RUN=1` must keep every stage from touching an external service. Any new code

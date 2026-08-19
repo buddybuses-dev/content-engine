@@ -1,0 +1,57 @@
+{
+  "$comment": "STAGED, NOT LIVE. The name reads as music, which does not obviously fit Whop product reviews — and this is the only channel with real subscribers, so it is the one worth getting right rather than guessing at. Tell me what it is for and I will rewrite this.",
+  "enabled": false,
+  "channel": {
+    "name": "MyMixVault",
+    "handle": "@mymixvault",
+    "googleAccount": "mizginhassan19@gmail.com",
+    "language": "en",
+    "niche": "PLACEHOLDER — needs your input. Currently assumed to be music mixes, which the Whop pipeline does not serve.",
+    "audience": "PLACEHOLDER — needs your input.",
+    "promise": "PLACEHOLDER — needs your input."
+  },
+  "voice": {
+    "persona": "PLACEHOLDER — needs your input before this channel produces anything.",
+    "do": [
+      "Open on something concrete",
+      "One idea per video"
+    ],
+    "dont": [
+      "No hype language",
+      "No invented claims",
+      "No fake scarcity"
+    ]
+  },
+  "cadence": {
+    "postsPerDay": 1,
+    "minMinutesBetweenPosts": 240,
+    "maxQueueDepth": 20
+  },
+  "compliance": {
+    "affiliateDisclosure": "#ad — affiliate link. I earn a commission if you join.",
+    "requireDisclosureWhenAffiliate": true,
+    "bannedClaimPatterns": [
+      "guaranteed",
+      "risk[- ]free",
+      "get rich",
+      "\\d+x your money"
+    ]
+  },
+  "platforms": {
+    "youtube": { "enabled": true },
+    "instagram": { "enabled": true },
+    "tiktok": { "enabled": true }
+  },
+  "sources": {
+    "discovery": {
+      "minReviewCount": 10,
+      "minRating": 4.0,
+      "maxNewItemsPerRun": 4
+    },
+    "manualProducts": [],
+    "exclude": {
+      "keywords": ["signals", "crypto pump", "betting", "casino"],
+      "productIds": []
+    }
+  }
+}
