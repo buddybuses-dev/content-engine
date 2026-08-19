@@ -18,15 +18,11 @@ jobs:
   stats:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
-      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
-      YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-      INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
-
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+        with:
+          secrets: ${{ toJSON(secrets) }}
 
       - name: Collect stats
         run: npm run stats

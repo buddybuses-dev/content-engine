@@ -11,19 +11,47 @@ utover API-nøklene.
 ## Hvordan det henger sammen
 
 ```
-config/whop.sources.json     ← her bestemmer du hva som skal lages
+config/channels/<kanal>.json   ← her bestemmer du hva som skal lages, per kanal
         │
         ▼
-   1-source      Produkt blir til en brief            → queue/01-brief
-   2-script      Claude skriver manus + 3 captions    → queue/03-render
-   3-render      Manus blir til video                 → queue/04-ready
-   4-publish     Video ut på alle tre plattformer     → queue/05-published
+   1-source      Produkt blir til en brief            → queue/<kanal>/01-brief
+   2-script      Claude skriver manus + 3 captions    → queue/<kanal>/03-render
+   3-render      Manus blir til video                 → queue/<kanal>/04-ready
+   4-publish     Video ut på alle tre plattformer     → queue/<kanal>/05-published
    5-stats       Tall skrives tilbake på videoen
 ```
 
-Hvert innholdselement er **én JSON-fil** som flytter seg mellom mappene i `queue/`.
-Det betyr at hele historikken ligger i git, at alt kan feilsøkes med `cat` og `jq`,
-og at et hvilket som helst steg trygt kan kjøres på nytt.
+Hvert innholdselement er **én JSON-fil** som flytter seg mellom mappene i
+`queue/<kanal>/`. Hele historikken ligger i git, alt kan feilsøkes med `cat` og `jq`,
+og et hvilket som helst steg kan trygt kjøres på nytt.
+
+## Flere kanaler
+
+Hver kanal er **én fil** i `config/channels/`. Filnavnet er slug-en, og den går igjen
+tre steder — kø-stien, credential-suffikset og loggene:
+
+```
+config/channels/wealthvault-insider.json
+  → queue/wealthvault-insider/
+  → YOUTUBE_REFRESH_TOKEN_WEALTHVAULT_INSIDER
+```
+
+Å legge til en kanal er å legge til en fil. Ingen kode, ingen registreringsliste, ingen
+endring i workflowene. Å pause en kanal er `"enabled": false`.
+
+Kanalene er helt uavhengige: egen kø, egen stemme, egen produktliste, egen kadens, egne
+credentials. Én kanal med utløpt token feiler alene — de tre andre publiserer videre.
+
+Credentials følger én regel: **kanal-spesifikk vinner, delt er fallback.**
+
+```
+YOUTUBE_REFRESH_TOKEN_WEALTHVAULT_INSIDER   ← denne kanalen
+YOUTUBE_REFRESH_TOKEN                       ← alle kanaler uten egen
+```
+
+Bruk delt form for det som faktisk deles (Anthropic-nøkkel, OAuth-klient) og suffiks for
+alt som identifiserer én konto (alle refresh-tokens). `npm run health` skriver ut
+nøyaktig hvilket variabelnavn hver kanal mangler.
 
 ## Kom i gang
 
@@ -35,10 +63,11 @@ npm run dry                   # hele syklusen uten å røre noe eksternt
 
 Deretter, i denne rekkefølgen:
 
-1. **Fyll inn `config/channel.config.json`** — navn, nisje, målgruppe, stemme.
-   `name` står som `CHANGE ME` til du gjør det.
-2. **Legg inn minst ett produkt** i `config/whop.sources.json` → `manualProducts`,
-   med `enabled: true`. Les `.claude/skills/whop-ugc-sourcing/SKILL.md` først — den
+1. **Gå gjennom `config/channels/`** — fire kanaler ligger der. Én er live
+   (`wealthvault-insider`), tre er `"enabled": false` med nisje og stemme jeg har
+   gjettet ut fra navnet. Rett dem før du skrur dem på.
+2. **Legg inn minst ett produkt** under `sources.manualProducts` i kanalens fil, med
+   `enabled: true`. Les `.claude/skills/whop-ugc-sourcing/SKILL.md` først — den
    beskriver hva som faktisk er verdt å lage video om.
 3. **Legg nøklene inn som GitHub-secrets** (`docs/SETUP.md` går gjennom hver enkelt).
 4. **Kjør workflowen `Pipeline` manuelt** med `dry_run` huket av, og se at den grønner.

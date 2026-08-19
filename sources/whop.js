@@ -2,7 +2,7 @@
 //
 // Two modes, deliberately:
 //
-//   manual  — products listed in config/whop.sources.json. Always available, needs no
+//   manual  — products listed under `sources` in the channel's own config. Needs no
 //             credentials, and is the mode you should actually run on. A product you
 //             have vetted yourself is the only kind you can make an honest video about.
 //
@@ -17,6 +17,7 @@
 
 import { requestJson } from '../lib/http.js';
 import { optional } from '../lib/env.js';
+import { channelEnv } from '../lib/channels.js';
 import { logger } from '../lib/log.js';
 
 const log = logger('source:whop');
@@ -46,10 +47,12 @@ export function loadManual(sourcesConfig) {
   return products;
 }
 
-export async function loadFromApi(sourcesConfig) {
-  const apiKey = optional('WHOP_API_KEY');
+export async function loadFromApi(sourcesConfig, channelSlug) {
+  // Each channel may promote a different Whop company, so the key resolves per channel
+  // and falls back to a shared WHOP_API_KEY when they all use the same one.
+  const apiKey = channelEnv('WHOP_API_KEY', channelSlug);
   if (!apiKey) {
-    log.info('WHOP_API_KEY not set, skipping API sourcing');
+    log.info('no Whop API key, skipping API sourcing', { channel: channelSlug });
     return [];
   }
 
@@ -117,9 +120,9 @@ export function applyFilters(products, sourcesConfig) {
   });
 }
 
-export async function collect(sourcesConfig) {
+export async function collect(sourcesConfig, channelSlug) {
   const manual = loadManual(sourcesConfig);
-  const fromApi = await loadFromApi(sourcesConfig);
+  const fromApi = await loadFromApi(sourcesConfig, channelSlug);
 
   // Manual entries win on conflict — they carry your vetting notes.
   const byId = new Map();

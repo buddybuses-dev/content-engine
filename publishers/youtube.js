@@ -6,7 +6,7 @@
 
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
-import { required } from '../lib/env.js';
+import { requireChannelEnv } from '../lib/channels.js';
 import { request, requestJson } from '../lib/http.js';
 import { logger } from '../lib/log.js';
 
@@ -14,11 +14,14 @@ const log = logger('publish:youtube');
 
 export const platform = 'youtube';
 
-async function accessToken() {
+// Each channel is a different YouTube channel, so the refresh token is per channel.
+// The OAuth client can be shared across all of them — one Google Cloud project is
+// enough, and sharing it keeps the consent screen and the quota in one place.
+async function accessToken(channelSlug) {
   const body = new URLSearchParams({
-    client_id: required('YOUTUBE_CLIENT_ID'),
-    client_secret: required('YOUTUBE_CLIENT_SECRET'),
-    refresh_token: required('YOUTUBE_REFRESH_TOKEN'),
+    client_id: requireChannelEnv('YOUTUBE_CLIENT_ID', channelSlug),
+    client_secret: requireChannelEnv('YOUTUBE_CLIENT_SECRET', channelSlug),
+    refresh_token: requireChannelEnv('YOUTUBE_REFRESH_TOKEN', channelSlug),
     grant_type: 'refresh_token',
   });
 
@@ -32,7 +35,7 @@ async function accessToken() {
 }
 
 export async function publish(item, spec) {
-  const token = await accessToken();
+  const token = await accessToken(item.channel);
   const caption = item.captions.youtube;
   const filePath = item.media.videoPath;
   const { size } = await stat(filePath);

@@ -1,2 +1,0 @@
-# Transient. Scripting writes straight through to 03-render; an item resting here
-# means a crash mid-write.

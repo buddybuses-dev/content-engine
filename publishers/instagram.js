@@ -8,7 +8,8 @@
 // Needs an Instagram Business or Creator account linked to a Facebook Page, and a
 // long-lived page access token. See docs/SETUP.md.
 
-import { required, optional } from '../lib/env.js';
+import { optional } from '../lib/env.js';
+import { requireChannelEnv } from '../lib/channels.js';
 import { requestJson } from '../lib/http.js';
 import { publicUrlFor } from '../lib/hosting.js';
 import { logger } from '../lib/log.js';
@@ -21,8 +22,10 @@ export const platform = 'instagram';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function publish(item, spec) {
-  const userId = required('INSTAGRAM_USER_ID');
-  const token = required('INSTAGRAM_ACCESS_TOKEN');
+  // One Instagram account per channel, so both the account id and its long-lived
+  // page token resolve per channel.
+  const userId = requireChannelEnv('INSTAGRAM_USER_ID', item.channel);
+  const token = requireChannelEnv('INSTAGRAM_ACCESS_TOKEN', item.channel);
   const videoUrl = await publicUrlFor(item.media.videoPath);
 
   const caption = composeCaption(item, spec);
