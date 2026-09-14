@@ -42,16 +42,22 @@
     ]
   },
   "platforms": {
-    "youtube": { "enabled": true },
-    "instagram": { "enabled": true },
-    "tiktok": { "enabled": true }
+    "youtube": {
+      "enabled": true
+    },
+    "instagram": {
+      "enabled": true
+    },
+    "tiktok": {
+      "enabled": true
+    }
   },
   "sources": {
     "type": "whop",
     "$comment": "Vetted products only. See .claude/skills/whop-ugc-sourcing/SKILL.md for the bar an entry has to clear — the four questions are not optional.",
     "discovery": {
       "minReviewCount": 10,
-      "minRating": 4.0,
+      "minRating": 4,
       "maxNewItemsPerRun": 6
     },
     "manualProducts": [
@@ -67,7 +73,14 @@
       }
     ],
     "exclude": {
-      "keywords": ["signals", "forex signals", "crypto pump", "betting", "casino", "sports picks"],
+      "keywords": [
+        "signals",
+        "forex signals",
+        "crypto pump",
+        "betting",
+        "casino",
+        "sports picks"
+      ],
       "productIds": []
     }
   }

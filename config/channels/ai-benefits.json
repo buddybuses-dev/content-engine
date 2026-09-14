@@ -40,9 +40,15 @@
     ]
   },
   "platforms": {
-    "youtube": { "enabled": true },
-    "instagram": { "enabled": true },
-    "tiktok": { "enabled": true }
+    "youtube": {
+      "enabled": true
+    },
+    "instagram": {
+      "enabled": true
+    },
+    "tiktok": {
+      "enabled": true
+    }
   },
   "sources": {
     "type": "topics",
@@ -58,7 +64,12 @@
       }
     ],
     "exclude": {
-      "keywords": ["signals", "crypto pump", "betting", "casino"],
+      "keywords": [
+        "signals",
+        "crypto pump",
+        "betting",
+        "casino"
+      ],
       "productIds": []
     }
   }

@@ -3,6 +3,10 @@ node_modules/
 .env.local
 *.log
 
+# Which account belongs to which channel. Not secret, but not the repository's
+# business either — and this repository is public.
+PRIVATE.md
+
 # Rendered media is large and reproducible; only the queue metadata is tracked.
 media/inbox/*
 media/broll/*
