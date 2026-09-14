@@ -8,6 +8,7 @@
 
 import { sourceFor } from '../sources/index.js';
 import { enabledChannels } from '../lib/channels.js';
+import { ensureChannelMedia } from '../lib/media.js';
 import {
   createItem,
   saveItem,
@@ -33,6 +34,7 @@ async function seenProductIds(channelSlug) {
 async function sourceChannel(channel) {
   const slug = channel.slug;
   await ensureChannelQueue(slug);
+  await ensureChannelMedia(slug);
 
   const sources = channel.sources ?? {};
   const maxNew = sources.discovery?.maxNewItemsPerRun ?? 5;

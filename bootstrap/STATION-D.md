@@ -6,21 +6,37 @@ How the content engine sits on the Windows machine, and why it is laid out this 
 
 ```
 D:\ContentEngine\
-├── repo\           the git clone — everything tracked lives here
-│   └── media\      junctions pointing at ..\media\* (see below)
+├── repo\                          the git clone — everything tracked lives here
+│   └── media\                     junctions pointing at ..\media\* (see below)
 ├── media\
-│   ├── inbox\      drop your video exports here, named <item-id>.mp4
-│   ├── broll\      background clips for the ffmpeg renderer
-│   ├── music\      background music beds
-│   └── out\        finished renders
-├── archive\        anything you want to keep but not track
-└── logs\           local run logs
+│   ├── inbox\
+│   │   ├── clipvault-agency\      drop exports here, named <item-id>.mp4
+│   │   ├── wealthvault-insider\
+│   │   ├── ai-benefits\
+│   │   └── mymixvault\
+│   ├── broll\<channel>\           background clips for the ffmpeg renderer
+│   ├── music\<channel>\           background music beds
+│   └── out\<channel>\             finished renders
+├── archive\                       anything you want to keep but not track
+└── logs\                          local run logs
 ```
 
 **Media lives outside the clone**, with directory junctions pointing into it. Two
 reasons: a large export can never be accidentally committed, and re-cloning or resetting
 the repo never touches work in progress. Junctions are used rather than symlinks because
 they need no administrator rights.
+
+**One room per channel.** B-roll that suits a Whop product review is wrong for a channel
+built on surprising facts, and one shared folder guarantees the wrong clip ends up on
+the wrong channel eventually.
+
+**A file one level up is shared.** Anything sitting in `media\broll\` itself is used by
+any channel that has none of its own — put generic footage there and channel-specific
+footage in the channel folder. The same fallback applies to `inbox`, so an export
+dropped in the flat folder is still picked up.
+
+Folders are created for you: `bootstrap-windows.ps1` does it at setup, and
+`npm run source` does it for any channel you add later.
 
 ## Install
 

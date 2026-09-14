@@ -80,6 +80,9 @@ foreach ($folder in $folders) {
     Write-Ok "created $folder"
 }
 
+# Per-channel subfolders come later, once the clone exists and the channel list can be
+# read from it. See "Creating per-channel production folders" below.
+
 # --- repository ------------------------------------------------------------
 
 Write-Step 'Fetching the repository'
@@ -116,6 +119,32 @@ foreach ($name in @('inbox', 'broll', 'music', 'out')) {
     }
     New-Item -ItemType Junction -Path $linkPath -Target $targetPath | Out-Null
     Write-Ok "$name -> $targetPath"
+}
+
+# --- per-channel production folders ---------------------------------------
+# One room per channel. B-roll that suits a Whop review is wrong for a channel built
+# on surprising facts, and sharing one folder guarantees the wrong clip ends up on the
+# wrong channel eventually. The channel list is read from the clone, so adding a
+# channel and re-running this script is all it takes.
+
+Write-Step 'Creating per-channel production folders'
+
+$channelsDir = Join-Path $repoPath 'config\channels'
+$slugs = Get-ChildItem $channelsDir -Filter '*.json' -ErrorAction SilentlyContinue |
+    ForEach-Object { $_.BaseName }
+
+if (-not $slugs) {
+    Write-Note 'No channel configs found — skipping. Re-run after the clone succeeds.'
+} else {
+    foreach ($slug in $slugs) {
+        foreach ($kind in @('inbox', 'broll', 'music', 'out')) {
+            $dir = Join-Path (Join-Path $mediaPath $kind) $slug
+            if (Test-Path $dir) { continue }
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        }
+        Write-Ok "$slug"
+    }
+    Write-Note 'Files in the shared folder (one level up) are used by any channel without its own.'
 }
 
 # --- dependencies ----------------------------------------------------------
@@ -166,11 +195,20 @@ Write-Host @"
   Env       $envPath
 
   Next:
-    1. Fill in $envPath              (see docs\SETUP.md)
-    2. Edit config\channel.config.json   - the channel name is still "CHANGE ME"
-    3. Add a product to config\whop.sources.json with enabled: true
-    4. cd $repoPath ; npm run health
+    1. Fill in $envPath                    (see docs\SETUP.md)
+    2. Review config\channels\*.json       - one file per channel; three are staged
+                                             with enabled:false until you confirm them
+    3. Add a product or topic to the channel you want live, with enabled: true
+    4. cd $repoPath ; npm run health       - names every missing credential, per channel
 
-  Drop video exports into $mediaPath\inbox named after the queue item id.
+  Each channel has its own production room:
+
+    $mediaPath\inbox\<channel>    drop exports here, named after the queue item id
+    $mediaPath\broll\<channel>    background clips for the ffmpeg renderer
+    $mediaPath\music\<channel>    background music
+    $mediaPath\out\<channel>      finished renders
+
+  A file one level up (e.g. $mediaPath\broll) is shared by every channel that has
+  none of its own.
 
 "@ -ForegroundColor Gray

@@ -8,11 +8,15 @@ node_modules/
 PRIVATE.md
 
 # Rendered media is large and reproducible; only the queue metadata is tracked.
+# Each kind has per-channel subfolders created at runtime, so ignore both levels.
 media/inbox/*
 media/broll/*
 media/music/*
 media/out/*
 !media/*/.gitkeep
+!media/*/*/
+media/*/*/*
+!media/*/*/.gitkeep
 
 # Local editor and OS noise
 .DS_Store

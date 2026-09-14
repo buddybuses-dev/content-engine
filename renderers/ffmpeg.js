@@ -9,10 +9,10 @@
 
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readdir, mkdir, writeFile, unlink } from 'node:fs/promises';
+import { writeFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { projectRoot } from '../lib/store.js';
+import { listInputs, outputDir } from '../lib/media.js';
 import { synthesize } from '../lib/tts.js';
 import { optional } from '../lib/env.js';
 import { logger } from '../lib/log.js';
@@ -37,23 +37,25 @@ async function probeDurationSec(file) {
   return seconds;
 }
 
-/** Deterministic pick, so re-running an item reproduces the same video. */
-async function pickBroll(itemId) {
-  const dir = join(projectRoot(), 'media', 'broll');
-  const files = (await readdir(dir).catch(() => [])).filter((f) => /\.(mp4|mov|m4v)$/i.test(f)).sort();
+/**
+ * Deterministic pick, so re-running an item reproduces the same video.
+ * The channel's own clips come first, then the shared pool.
+ */
+async function pickBroll(item) {
+  const files = await listInputs('broll', item.channel, /\.(mp4|mov|m4v)$/i);
   if (files.length === 0) {
     throw new Error(
-      'media/broll/ has no video files. Add at least one vertical background clip you have the rights to use.',
+      `No b-roll for "${item.channel}". Add a vertical clip you have the rights to use to ` +
+        `media/broll/${item.channel}/ (this channel only) or media/broll/ (shared by all channels).`,
     );
   }
-  const hash = createHash('sha256').update(itemId).digest();
-  return join(dir, files[hash.readUInt32BE(0) % files.length]);
+  const hash = createHash('sha256').update(item.id).digest();
+  return files[hash.readUInt32BE(0) % files.length];
 }
 
-async function pickMusic() {
-  const dir = join(projectRoot(), 'media', 'music');
-  const files = (await readdir(dir).catch(() => [])).filter((f) => /\.(mp3|m4a|wav)$/i.test(f)).sort();
-  return files.length ? join(dir, files[0]) : null;
+async function pickMusic(item) {
+  const files = await listInputs('music', item.channel, /\.(mp3|m4a|wav)$/i);
+  return files[0] ?? null;
 }
 
 /**
@@ -83,21 +85,20 @@ function buildSrt(item, actualDurationSec) {
 }
 
 export async function render(item) {
-  const outDir = join(projectRoot(), 'media', 'out');
-  await mkdir(outDir, { recursive: true });
+  const outDir = await outputDir(item.channel);
 
   const voicePath = join(outDir, `${item.id}.mp3`);
   const srtPath = join(outDir, `${item.id}.srt`);
   const videoPath = join(outDir, `${item.id}.mp4`);
 
-  await synthesize(item.script.voiceover, voicePath);
+  await synthesize(item.script.voiceover, voicePath, item.channel);
   const durationSec = await probeDurationSec(voicePath);
-  log.info('voiceover length', { id: item.id, durationSec: durationSec.toFixed(1) });
+  log.info('voiceover length', { channel: item.channel, id: item.id, durationSec: durationSec.toFixed(1) });
 
   await writeFile(srtPath, buildSrt(item, durationSec), 'utf8');
 
-  const broll = await pickBroll(item.id);
-  const music = await pickMusic();
+  const broll = await pickBroll(item);
+  const music = await pickMusic(item);
   const musicVolume = optional('MUSIC_VOLUME', '0.08');
   const fontSize = optional('CAPTION_FONT_SIZE', '64');
 
